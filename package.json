@@ -1,0 +1,30 @@
+{
+  "name": "simple-counter",
+  "version": "1.0.0",
+  "description": "Example of a simple counter app built with React Neon",
+  "scripts": {
+    "start:simple-counter": "parcel src/simple-counter/index.html",
+    "test": "jest --watch"
+  },
+  "dependencies": {
+    "neon": "file:../neon",
+    "react-neon": "file:../react-neon",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "typescript": "^3.5.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.18",
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
+    "eslint": "^6.2.1",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "jest": "^24.9.0",
+    "parcel-bundler": "^1.12.3",
+    "prettier": "^1.18.2",
+    "ts-jest": "^24.0.2"
+  }
+}
