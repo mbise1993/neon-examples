@@ -1,9 +1,9 @@
 {
-  "name": "simple-counter",
+  "name": "neon-examples",
   "version": "1.0.0",
-  "description": "Example of a simple counter app built with React Neon",
+  "description": "Example usages of the Neon framework",
   "scripts": {
-    "start:simple-counter": "parcel src/simple-counter/index.html",
+    "react:simple-counter": "parcel src/react/simple-counter/index.html",
     "test": "jest --watch"
   },
   "dependencies": {

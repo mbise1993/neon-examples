@@ -13,7 +13,7 @@ const App: React.FC = () => {
       <div>
         <h2>Hello Neon!</h2>
         <UiContextProvider uiContext={counterUi}>
-          <CounterView />
+          <CounterView id="counter-view" />
         </UiContextProvider>
       </div>
     </AppProvider>
