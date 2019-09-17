@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Example usages of the Neon framework",
   "scripts": {
-    "react:simple-counter": "parcel src/react/simple-counter/index.html",
+    "react:counter": "parcel src/react/counter/index.html",
     "test": "jest --watch"
   },
   "dependencies": {
