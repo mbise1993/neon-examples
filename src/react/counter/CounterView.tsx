@@ -1,23 +1,23 @@
 import React from 'react';
-import { useSelector, useExecuteCommand } from 'react-neon';
+import { useSelector, useCommand } from 'react-neon';
 
 import { CounterDomainContext } from './contexts';
 import { IncrementCommand, DecrementCommand } from './commands';
 
-export interface CounterViewProps {
-  id: string;
-}
-
-export const CounterView: React.FC<CounterViewProps> = ({ id }) => {
+export const CounterView: React.FC = () => {
   const value = useSelector(CounterDomainContext, state => state.value);
-  const increment = useExecuteCommand(CounterDomainContext, IncrementCommand);
-  const decrement = useExecuteCommand(CounterDomainContext, DecrementCommand);
+  const increment = useCommand(CounterDomainContext, IncrementCommand);
+  const decrement = useCommand(CounterDomainContext, DecrementCommand);
 
   return (
-    <div id={id}>
+    <div>
       <span>Count: {value}</span>
-      <button onClick={() => increment(undefined)}>Increment</button>
-      <button onClick={() => decrement(undefined)}>Decrement</button>
+      <button disabled={!increment.canExecute()} onClick={() => increment.execute(undefined)}>
+        Increment
+      </button>
+      <button disabled={!decrement.canExecute()} onClick={() => decrement.execute(undefined)}>
+        Decrement
+      </button>
     </div>
   );
 };
