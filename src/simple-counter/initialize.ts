@@ -1,10 +1,10 @@
-import { DomainContext, NeonApp, UiContext } from 'neon';
+import { NeonApp, UiContext } from 'neon';
 
-import { Counter } from './state';
+import { CounterDomainContext } from './contexts';
 import { IncrementCommand, DecrementCommand } from './commands';
 
 export default function initialize() {
-  const counterDomain = new DomainContext<Counter>('domain.counter', { value: 0 });
+  const counterDomain = new CounterDomainContext();
   counterDomain.registerCommand(new IncrementCommand());
   counterDomain.registerCommand(new DecrementCommand());
 

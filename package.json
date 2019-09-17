@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "neon": "file:../neon",
-    "react-neon": "file:../react-neon",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-neon": "file:../react-neon",
     "typescript": "^3.5.3"
   },
   "devDependencies": {

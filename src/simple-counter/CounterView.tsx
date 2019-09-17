@@ -1,17 +1,19 @@
 import React from 'react';
-import { useDomainContext } from 'react-neon';
-import { DomainContext } from 'neon';
+import { useSelector, useExecuteCommand } from 'react-neon';
 
-import { Counter } from './state';
+import { CounterDomainContext } from './contexts';
+import { IncrementCommand, DecrementCommand } from './commands';
 
 export const CounterView: React.FC = () => {
-  const value = useDomainContext<Counter>(DomainContext);
+  const value = useSelector(CounterDomainContext, state => state.value);
+  const increment = useExecuteCommand(CounterDomainContext, IncrementCommand);
+  const decrement = useExecuteCommand(CounterDomainContext, DecrementCommand);
 
   return (
     <div>
       <span>Count: {value}</span>
-      <button>Increment</button>
-      <button>Decrement</button>
+      <button onClick={() => increment(undefined)}>Increment</button>
+      <button onClick={() => decrement(undefined)}>Decrement</button>
     </div>
   );
 };
