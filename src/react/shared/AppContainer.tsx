@@ -5,6 +5,8 @@ import RedoIcon from '@material-ui/icons/Redo';
 import { AppProvider } from 'react-neon';
 import { NeonApp } from 'neon';
 
+import { CommandsDropdown } from './CommandsDropdown';
+
 export interface AppContainerProps {
   app: NeonApp;
   name: string;
@@ -16,20 +18,23 @@ export const AppContainer: React.FC<AppContainerProps> = ({ app, name, children 
       <Box>
         <AppBar position="static">
           <Toolbar>
-            <Typography variant="h6">{name}</Typography>
-            <Box marginLeft={1}>
-              <IconButton color="inherit">
+            <Box flexGrow={1} display="flex" alignItems="center">
+              <Typography variant="h6">{name}</Typography>
+              <Box marginLeft={2}>
+                <CommandsDropdown app={app} />
+              </Box>
+            </Box>
+            <Box>
+              <IconButton title="Undo" color="inherit">
                 <UndoIcon />
               </IconButton>
-            </Box>
-            <Box marginLeft={1}>
-              <IconButton color="inherit">
+              <IconButton title="Redo" color="inherit">
                 <RedoIcon />
               </IconButton>
             </Box>
           </Toolbar>
         </AppBar>
-        {children}
+        <Box paddingY={2}>{children}</Box>
       </Box>
     </AppProvider>
   );
