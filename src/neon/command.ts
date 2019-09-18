@@ -18,7 +18,7 @@ export type CommandArgsType<T extends Command<any, any>> = Parameters<
 >[1];
 
 export const createCommand = <TState, TArgs>(
-  command: Partial<Command<TState, TArgs>>
+  command: Partial<Command<TState, TArgs>>,
 ): Command<TState, TArgs> => {
   const defaultCommand: Command<TState, TArgs> = {
     id: '',
@@ -26,12 +26,12 @@ export const createCommand = <TState, TArgs>(
     supportsUndo: false,
     requeryOnChange: [],
     canExecute: () => true,
-    execute: context => context.state
+    execute: context => context.state,
   };
 
   return {
     ...defaultCommand,
-    ...command
+    ...command,
   };
 };
 
@@ -59,7 +59,7 @@ export class CommandService<TState> implements Service {
   public execute<T extends Command<any, any>>(
     context: DomainContext<TState>,
     command: T,
-    args: CommandArgsType<T>
+    args: CommandArgsType<T>,
   ): TState {
     if (!this.canExecute(context, command.id)) {
       throw new Error(`Cannot execute command '${command.id} on context '${context.id}'`);

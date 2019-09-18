@@ -10,8 +10,7 @@ import {
   MenuList,
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import { NeonApp, Command } from 'neon';
-import { DomainContext } from 'neon/src';
+import { NeonApp, Command, DomainContext } from 'neon';
 
 interface CommandInfo {
   command: Command<any, any>;

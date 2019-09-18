@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { UiContextContainer } from 'react-neon';
+import { NeonApp } from 'neon';
 
+import { CounterModule } from './counterModule';
 import { AppContainer } from '../shared/AppContainer';
-import initialize from './initialize';
 import { CounterView } from './CounterView';
 
-const { app, counterUi } = initialize();
+const app = new NeonApp('Neon Counter');
+app.attachModule(new CounterModule());
 
 const App: React.FC = () => {
   return (

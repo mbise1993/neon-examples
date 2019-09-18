@@ -1,12 +1,13 @@
 import { Module } from './module';
 import { Command, CommandService } from './command';
-import { ServiceProvider } from './service';
+import { ServiceProvider, Service } from './service';
 import { NeonUiContext } from './uiContext';
 
 export class NeonApp implements ServiceProvider {
   private _modules: Record<string, Module> = {};
-  private _uiContexts: Record<string, NeonUiContext> = {};
   private _commandServices: CommandService<any>[] = [];
+  private _uiContexts: Record<string, NeonUiContext> = {};
+  private _activeUiContextId?: string;
 
   constructor(private _name: string) {}
 
@@ -20,11 +21,11 @@ export class NeonApp implements ServiceProvider {
         acc.push(...service.commands);
         return acc;
       },
-      [] as Command<any, any>[]
+      [] as Command<any, any>[],
     );
   }
 
-  public getService<T>(id: string) {
+  public getService<T extends Service>(id: string) {
     Object.values(this._modules).forEach(mod => {
       const service = mod.getService<T>(id);
       if (service) {

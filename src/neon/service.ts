@@ -12,7 +12,7 @@ export interface ServiceType {
 }
 
 export interface ServiceProvider {
-  readonly getService: <T>(id: string) => T | undefined;
+  readonly getService: <T extends Service>(id: string) => T | undefined;
 }
 
 export class NeonServiceProvider {
