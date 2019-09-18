@@ -9,10 +9,8 @@
   "dependencies": {
     "@material-ui/core": "^4.4.2",
     "@material-ui/icons": "^4.4.1",
-    "neon": "file:../neon",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-neon": "file:../react-neon",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
