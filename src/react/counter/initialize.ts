@@ -1,19 +1,18 @@
 import { NeonApp, UiContext } from 'neon';
 
 import { CounterDomainContext } from './contexts';
-import { IncrementCommand, DecrementCommand } from './commands';
+import { incrementCommand, decrementCommand } from './commands';
 
 export default function initialize() {
   const counterDomain = new CounterDomainContext();
 
   const counterUi = new UiContext('ui.counter');
   counterUi.addDomainContext(counterDomain);
-  counterUi.registerKeybinding({ keyCode: '=', command: IncrementCommand });
-  counterUi.registerKeybinding({ keyCode: '-', command: DecrementCommand });
+  counterUi.registerKeybinding({ keyCode: '=', command: incrementCommand });
+  counterUi.registerKeybinding({ keyCode: '-', command: decrementCommand });
 
   const app = new NeonApp();
   app.attachUiContext(counterUi);
-  app.attachDomainContext(counterDomain);
 
   return { app, counterUi };
 }

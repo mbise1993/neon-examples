@@ -26,7 +26,7 @@ export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
   const [isOpen, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
 
-  const options = app.getDomainContexts().reduce(
+  const options = app.domainContexts.reduce(
     (acc, context) => {
       context.getCommands().forEach(command => {
         acc.push({
@@ -67,10 +67,10 @@ export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
                 <MenuList>
                   {options.map(option => (
                     <MenuItem
-                      key={option.command.getId()}
-                      onClick={() => option.command.execute(option.context, undefined)}
+                      key={option.command.id}
+                      onClick={() => option.context.executeCommand(option.command, {})}
                     >
-                      {option.command.getDescription()}
+                      {option.command.description}
                     </MenuItem>
                   ))}
                 </MenuList>
