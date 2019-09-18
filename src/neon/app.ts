@@ -5,7 +5,7 @@ import { NeonUiContext } from './uiContext';
 
 export class NeonApp implements ServiceProvider {
   private _modules: Record<string, Module> = {};
-  private _commandServices: CommandService<any>[] = [];
+  private _commandServices: Record<string, CommandService<any>> = {};
   private _uiContexts: Record<string, NeonUiContext> = {};
   private _activeUiContextId?: string;
 
@@ -16,7 +16,7 @@ export class NeonApp implements ServiceProvider {
   }
 
   public get availableCommands() {
-    return this._commandServices.reduce(
+    return Object.values(this._commandServices).reduce(
       (acc, service) => {
         acc.push(...service.commands);
         return acc;
@@ -42,7 +42,7 @@ export class NeonApp implements ServiceProvider {
 
     const commandService = mod.getService<CommandService<any>>(CommandService.id);
     if (commandService) {
-      this._commandServices.push(commandService);
+      this._commandServices[mod.id] = commandService;
     }
 
     mod.onDidAttach && mod.onDidAttach(this);
