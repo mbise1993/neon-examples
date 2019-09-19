@@ -1,4 +1,4 @@
-import { CommandConfig } from './command';
+import { CommandConfig } from './interfaces';
 
 const undo: CommandConfig<any> = {
   info: {
