@@ -1,4 +1,4 @@
-import { DomainContext, Service } from '.';
+import { NeonContext, Service } from '.';
 import { createCommand } from './command';
 
 export interface State {
@@ -18,12 +18,17 @@ export const updateCountCommand = createCommand<State, UpdateCountArgs>({
   }),
 });
 
-export class TestService extends Service {
+export class TestService implements Service {
   public static readonly id = 'test-service';
+
+  public get id() {
+    return TestService.id;
+  }
 }
 
-export class TestDomainContext extends DomainContext<State> {
-  constructor() {
-    super('context.counterDomain', { count: 1 });
+export class CounterContext extends NeonContext<State> {
+  constructor(count = 1) {
+    super('context.counter', { count });
+    this.handleCommands(updateCountCommand);
   }
 }

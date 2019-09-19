@@ -1,5 +1,5 @@
-import React, { MutableRefObject } from 'react';
-import { NeonApp, NeonUiContext } from 'neon';
+import React from 'react';
+import { NeonApp, Context } from 'neon';
 
 export const AppContext = React.createContext<NeonApp>(new NeonApp(''));
 
@@ -11,19 +11,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ app, children }) => {
   return <AppContext.Provider value={app}>{children}</AppContext.Provider>;
 };
 
-export const UiContext = React.createContext<NeonUiContext>(new NeonUiContext(''));
-
-export interface UiContextContainerProps {
-  uiContext: NeonUiContext;
-  style?: React.CSSProperties;
-  children: React.ReactElement<{ id: string }>;
+interface NeonContextContainerProps<TState> extends React.HTMLProps<HTMLDivElement> {
+  readonly context: Context<TState>;
 }
 
-export const UiContextContainer = ({ uiContext, style, children }: UiContextContainerProps) => {
-  const containerRef = React.useRef() as MutableRefObject<HTMLDivElement>;
+function NeonContextContainer<TState>({
+  context,
+  children,
+  ...rest
+}: NeonContextContainerProps<TState>) {
+  const app = React.useContext(AppContext);
+  const containerRef = React.useRef() as React.MutableRefObject<HTMLDivElement>;
 
   const handleKeyPress = (e: KeyboardEvent) => {
-    uiContext.tryHandleKeyCode(e.key);
+    app.handleKeyCode(e.key);
   };
 
   React.useLayoutEffect(() => {
@@ -38,10 +39,32 @@ export const UiContextContainer = ({ uiContext, style, children }: UiContextCont
   }, [children, handleKeyPress]);
 
   return (
-    <UiContext.Provider value={uiContext}>
-      <div ref={containerRef} style={style} tabIndex={-1}>
-        {children}
-      </div>
-    </UiContext.Provider>
+    <div ref={containerRef} tabIndex={-1} {...rest}>
+      {children}
+    </div>
   );
-};
+}
+
+export interface NeonContext<TState> {
+  Container: React.ComponentType<React.HTMLProps<HTMLDivElement>>;
+  useContext(): Context<TState>;
+}
+
+export function createNeonContext<TState>(context: Context<TState>): NeonContext<TState> {
+  const ReactContext = React.createContext(context);
+
+  const Container: React.FC<React.HTMLProps<HTMLDivElement>> = ({ children, ...rest }) => {
+    return (
+      <ReactContext.Provider value={context}>
+        <NeonContextContainer<TState> context={context} {...rest}>
+          {children}
+        </NeonContextContainer>
+      </ReactContext.Provider>
+    );
+  };
+
+  return {
+    Container,
+    useContext: () => React.useContext(ReactContext),
+  };
+}

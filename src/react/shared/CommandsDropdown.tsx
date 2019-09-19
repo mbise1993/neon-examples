@@ -10,12 +10,7 @@ import {
   MenuList,
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import { NeonApp, Command, DomainContext } from 'neon';
-
-interface CommandInfo {
-  command: Command<any, any>;
-  context: DomainContext<any>;
-}
+import { NeonApp } from 'neon';
 
 export interface CommandsDropdownProps {
   app: NeonApp;
@@ -24,20 +19,6 @@ export interface CommandsDropdownProps {
 export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
   const [isOpen, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
-
-  const options = app.domainContexts.reduce(
-    (acc, context) => {
-      context.getCommands().forEach(command => {
-        acc.push({
-          command,
-          context,
-        });
-      });
-
-      return acc;
-    },
-    [] as CommandInfo[],
-  );
 
   return (
     <div>
@@ -64,12 +45,9 @@ export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
             <Paper id="menu-list-grow">
               <ClickAwayListener onClickAway={() => setOpen(false)}>
                 <MenuList>
-                  {options.map(option => (
-                    <MenuItem
-                      key={option.command.id}
-                      onClick={() => option.context.executeCommand(option.command, {})}
-                    >
-                      {option.command.description}
+                  {app.commands.map(command => (
+                    <MenuItem key={command.id} onClick={() => app.executeCommand(command, {})}>
+                      {command.description}
                     </MenuItem>
                   ))}
                 </MenuList>

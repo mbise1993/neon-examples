@@ -1,21 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { UiContextContainer } from 'react-neon';
 import { NeonApp } from 'neon';
 
-import { CounterModule } from './counterModule';
+import { counterContext, CounterContext } from './counterContext';
 import { AppContainer } from '../shared/AppContainer';
 import { CounterView } from './CounterView';
 
 const app = new NeonApp('Neon Counter');
-app.attachModule(new CounterModule());
+app.attachContext(counterContext);
 
 const App: React.FC = () => {
   return (
-    <AppContainer app={app} name={'Neon Counter'}>
-      <UiContextContainer uiContext={counterUi}>
+    <AppContainer app={app}>
+      <CounterContext.Container>
         <CounterView />
-      </UiContextContainer>
+      </CounterContext.Container>
     </AppContainer>
   );
 };

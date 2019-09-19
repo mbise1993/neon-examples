@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["es2017"],
+    "lib": ["dom", "es2017"],
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -11,8 +11,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "jsx": "react",
-    "baseUrl": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": "src"
   },
   "include": ["src"]
 }

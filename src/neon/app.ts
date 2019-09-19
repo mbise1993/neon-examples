@@ -1,13 +1,11 @@
-import { Module } from './module';
-import { Command, CommandService } from './command';
-import { ServiceProvider, Service } from './service';
-import { NeonUiContext } from './uiContext';
+import { uniqBy } from 'lodash';
 
-export class NeonApp implements ServiceProvider {
-  private _modules: Record<string, Module> = {};
-  private _commandServices: Record<string, CommandService<any>> = {};
-  private _uiContexts: Record<string, NeonUiContext> = {};
-  private _activeUiContextId?: string;
+import { Context } from './context';
+import { Command, CommandArgsType } from './command';
+
+export class NeonApp {
+  private _contexts: Record<string, Context<any>> = {};
+  private _activeContext?: Context<any>;
 
   constructor(private _name: string) {}
 
@@ -15,51 +13,53 @@ export class NeonApp implements ServiceProvider {
     return this._name;
   }
 
-  public get availableCommands() {
-    return Object.values(this._commandServices).reduce(
-      (acc, service) => {
-        acc.push(...service.commands);
-        return acc;
+  public get commands() {
+    const allCommands = Object.values(this._contexts).reduce(
+      (arr, context) => {
+        arr.push(...context.commands);
+        return arr;
       },
       [] as Command<any, any>[],
     );
+
+    return uniqBy(allCommands, command => command.id);
   }
 
-  public getService<T extends Service>(id: string) {
-    Object.values(this._modules).forEach(mod => {
-      const service = mod.getService<T>(id);
-      if (service) {
-        return service;
-      }
-    });
-
-    return undefined;
+  public get activeContext() {
+    return this._activeContext;
   }
 
-  public attachModule(mod: Module) {
-    mod.onWillAttach && mod.onWillAttach(this);
-    this._modules[mod.id] = mod;
-
-    const commandService = mod.getService<CommandService<any>>(CommandService.id);
-    if (commandService) {
-      this._commandServices[mod.id] = commandService;
+  public executeCommand<C extends Command<any, any>>(command: C, args: CommandArgsType<C>) {
+    if (this.activeContext) {
+      this.activeContext.executeCommand(command, args);
     }
-
-    mod.onDidAttach && mod.onDidAttach(this);
   }
 
-  public detachModule(id: string) {
-    const mod = this._modules[id];
-    mod.onWillDetach && mod.onWillDetach(this);
-    delete this._modules[id];
-    mod.onDidDetach && mod.onDidDetach(this);
+  public attachContext(context: Context<any>) {
+    context.onWillAttach && context.onWillAttach(this);
+    this._contexts[context.id] = context;
+    context.onDidAttach && context.onDidAttach(this);
+    this.activateContext(context);
   }
 
-  public attachUiContext(uiContext: NeonUiContext) {
-    this._uiContexts[uiContext.id] = uiContext;
+  public detachContext(context: Context<any>) {
+    context.onWillDetach && context.onWillDetach(this);
+    delete this._contexts[context.id];
+    context.onDidDetach && context.onDidDetach(this);
   }
 
-  public detachUiContext(id: string) {
-    delete this._uiContexts[id];
+  public getContext(context: Context<any>) {
+    return this._contexts[context.id];
+  }
+
+  public activateContext(context: Context<any>) {
+    this._activeContext = context;
+  }
+
+  public handleKeyCode(keyCode: string) {
+    const commandToExecute = this.commands.find(command => command.keybinding === keyCode);
+    if (commandToExecute) {
+      this.executeCommand(commandToExecute, {});
+    }
   }
 }

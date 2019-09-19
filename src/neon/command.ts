@@ -1,16 +1,17 @@
-import { DomainContext, Selector } from './domainContext';
+import { Context, Selector } from './context';
 import { Service } from './service';
 
 export interface CommandInfo {
   readonly id: string;
   readonly description: string;
+  readonly keybinding?: string;
 }
 
 export interface Command<TState, TArgs> extends CommandInfo {
   readonly supportsUndo: boolean;
   readonly requeryOnChange: Selector<TState, any>[];
-  readonly canExecute: (context: DomainContext<TState>) => boolean;
-  readonly execute: (context: DomainContext<TState>, args: TArgs) => TState;
+  readonly canExecute: (context: Context<TState>) => boolean;
+  readonly execute: (context: Context<TState>, args: TArgs) => TState;
 }
 
 export type CommandArgsType<T extends Command<any, any>> = Parameters<
@@ -51,13 +52,13 @@ export class CommandService<TState> implements Service {
     this._commands[command.id] = command;
   }
 
-  public canExecute(context: DomainContext<TState>, commandId: string) {
+  public canExecute(context: Context<TState>, commandId: string) {
     const command = this._commands[commandId];
     return command.canExecute(context);
   }
 
   public execute<T extends Command<any, any>>(
-    context: DomainContext<TState>,
+    context: Context<TState>,
     command: T,
     args: CommandArgsType<T>,
   ): TState {
@@ -71,4 +72,9 @@ export class CommandService<TState> implements Service {
 
     return command.execute(context, args);
   }
+}
+
+export interface Keybinding {
+  keyCode: string;
+  command: Command<any, any>;
 }

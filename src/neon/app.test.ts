@@ -1,30 +1,26 @@
 import { NeonApp } from './app';
-import { NeonUiContext } from './uiContext';
+
+import { CounterContext } from './testUtil';
 
 describe(NeonApp.name, () => {
-  it('can attach and detach UiContext', () => {
-    const app = new NeonApp();
-    const context = new NeonUiContext('test-ui-context');
-    app.attachUiContext(context);
+  it('can attach and detach Context', () => {
+    const app = new NeonApp('Test');
+    const context = new CounterContext();
+    app.attachContext(context);
+    expect(app.getContext(context)).toBeTruthy();
 
-    expect(context.parentUiContext).toBeTruthy();
-    expect((context.parentUiContext as NeonUiContext).id).toBe(app.uiContext.id);
-
-    app.detachUiContext(context);
-    expect(context.parentUiContext).toBeUndefined();
+    app.detachContext(context);
+    expect(app.getContext(context)).toBeTruthy();
   });
 
-  it('can set active UiContext', () => {
-    const app = new NeonApp();
-    const context1 = new NeonUiContext('test-ui-context-1');
-    const context2 = new NeonUiContext('test-ui-context-2');
-    app.attachUiContext(context1);
-    app.attachUiContext(context2);
+  it('can activate context', () => {
+    const app = new NeonApp('Test');
+    const context1 = new CounterContext();
+    const context2 = new CounterContext();
+    app.attachContext(context1);
+    app.attachContext(context2);
 
-    app.activeUiContext = context1;
-    expect(app.activeUiContext).toBe(context1);
-
-    app.activeUiContext = context2;
-    expect(app.activeUiContext).toBe(context2);
+    app.activateContext(context1);
+    expect(app.activeContext).toBe(context1);
   });
 });

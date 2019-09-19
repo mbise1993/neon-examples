@@ -4,13 +4,13 @@ import IncrementIcon from '@material-ui/icons/Add';
 import DecrementIcon from '@material-ui/icons/Remove';
 import { useSelector, useCommand } from 'react-neon';
 
-import { CounterDomainContext } from './contexts';
-import { incrementCommand, decrementCommand } from './commands';
+import { counterContext } from './counterContext';
+import { CounterCommands } from './counterCommands';
 
 export const CounterView: React.FC = () => {
-  const value = useSelector(CounterDomainContext, state => state.value);
-  const increment = useCommand(CounterDomainContext, incrementCommand);
-  const decrement = useCommand(CounterDomainContext, decrementCommand);
+  const value = useSelector(counterContext, state => state.value);
+  const increment = useCommand(CounterCommands.increment);
+  const decrement = useCommand(CounterCommands.decrement);
 
   return (
     <Card>
