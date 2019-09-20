@@ -5,8 +5,9 @@ const undo: Command<any> = {
   name: 'Undo',
   description: 'Undo',
   keybinding: 'Meta+z',
-  canExecute: () => true,
-  execute: context => context.state,
+  requeryOnChange: [state => state],
+  canExecute: context => context.history.hasPastFrames(),
+  execute: context => context.history.goBack(1),
 };
 
 const redo: Command<any> = {
@@ -14,8 +15,9 @@ const redo: Command<any> = {
   name: 'Redo',
   description: 'Redo',
   keybinding: 'Meta+Shift+z',
-  canExecute: () => true,
-  execute: context => context.state,
+  requeryOnChange: [state => state],
+  canExecute: context => context.history.hasFutureFrames(),
+  execute: context => context.history.goForward(1),
 };
 
 export const NeonCommands = {

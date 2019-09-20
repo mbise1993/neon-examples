@@ -1,8 +1,32 @@
 import { App } from './app';
 import { Context } from './context';
 import { Command } from './command';
+import { StateChangedHook } from './state';
+import { Hooks, HooksProvider } from './hooks';
 
-export interface Module<TState> {
+export interface ModuleHooks<TState> {
+  readonly activeContextWillChange?: (
+    current: Context<TState> | undefined,
+    next: Context<TState>,
+  ) => void;
+  readonly activeContextDidChange?: (context: Context<TState>) => void;
+  readonly contextWillAttach?: (context: Context<TState>) => void;
+  readonly contextDidAttach?: (context: Context<TState>) => void;
+  readonly contextWillDetach?: (context: Context<TState>) => void;
+  readonly contextDidDetach?: (context: Context<TState>) => void;
+}
+
+export interface CanExecuteChangedHook<TState> {
+  readonly onCanExecuteChanged?: (command: Command<TState>) => void;
+}
+
+type ModuleHooksType<TState> = ModuleHooks<TState> | CanExecuteChangedHook<TState>;
+
+const isModuleHook = <TState>(hook: ModuleHooksType<TState>): hook is ModuleHooks<TState> => {
+  return 'activeContextWillChange' in hook;
+};
+
+export interface Module<TState> extends HooksProvider<ModuleHooksType<TState>> {
   readonly id: string;
   readonly contexts: Context<TState>[];
   readonly activeContext: Context<TState> | undefined;
@@ -26,9 +50,21 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   private _activeContext?: Context<TState>;
   private _commands: Record<string, Command<TState>> = {};
   private _keybindings: Record<string, string> = {};
+  private _stateChangedHooks: StateChangedHook<TState, any>[] = [];
+  private _moduleHooks = new Hooks<ModuleHooks<TState>>();
+  private _canExecuteChangedHooks = new Hooks<CanExecuteChangedHook<TState>>();
 
   constructor(private _id: string, commands: Command<TState>[]) {
-    commands.forEach(command => (this._commands[command.id] = command));
+    commands.forEach(command => {
+      this._commands[command.id] = command;
+      command.requeryOnChange.forEach(selector => {
+        this._stateChangedHooks.push(
+          new StateChangedHook(selector, () =>
+            this._canExecuteChangedHooks.invoke('onCanExecuteChanged', [command]),
+          ),
+        );
+      });
+    });
   }
 
   public get id() {
@@ -50,15 +86,31 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   public abstract createContext(): Context<TState>;
 
   public attachContext(context: Context<TState>) {
+    this._moduleHooks.invoke('contextWillAttach', [context]);
     this._contexts[context.id] = context;
+    this._moduleHooks.invoke('contextDidAttach', [context]);
   }
 
   public detachContext(context: Context<TState>) {
+    this._moduleHooks.invoke('contextWillDetach', [context]);
     delete this._contexts[context.id];
+    this._moduleHooks.invoke('contextDidDetach', [context]);
   }
 
   public activateContext(context: Context<TState>) {
+    if (this._activeContext) {
+      for (const hook of this._stateChangedHooks) {
+        this._activeContext.removeHook(hook);
+      }
+    }
+
+    this._moduleHooks.invoke('activeContextWillChange', [this._activeContext, context]);
     this._activeContext = context;
+    this._moduleHooks.invoke('activeContextDidChange', [this._activeContext]);
+
+    for (const hook of this._stateChangedHooks) {
+      this._activeContext.registerHook(hook);
+    }
   }
 
   public canExecuteCommand(command: Command<TState>) {
@@ -85,5 +137,21 @@ export abstract class AbstractModule<TState> implements Module<TState> {
     }
 
     this.executeCommand(this._commands[commandId]);
+  }
+
+  public registerHook(hook: ModuleHooksType<TState>) {
+    if (isModuleHook(hook)) {
+      this._moduleHooks.register(hook);
+    } else {
+      this._canExecuteChangedHooks.register(hook);
+    }
+  }
+
+  public removeHook(hook: ModuleHooksType<TState>) {
+    if (isModuleHook(hook)) {
+      this._moduleHooks.remove(hook);
+    } else {
+      this._canExecuteChangedHooks.remove(hook);
+    }
   }
 }

@@ -6,6 +6,7 @@ const increment: Command<Counter> = {
   id: 'command.increment',
   name: 'Increment',
   keybinding: '=',
+  requeryOnChange: [],
   canExecute: () => true,
   execute: context => {
     return {
@@ -19,6 +20,7 @@ const decrement: Command<Counter> = {
   id: 'command.decrement',
   name: 'Decrement',
   keybinding: '-',
+  requeryOnChange: [state => state.value],
   canExecute: context => context.state.value > 0,
   execute: context => {
     return {

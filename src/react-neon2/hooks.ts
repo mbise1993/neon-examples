@@ -1,5 +1,5 @@
 import React from 'react';
-import { Command } from 'neon2';
+import { Command, StateChangedHook } from 'neon2';
 
 import { AppContext, ModuleContext } from './contexts';
 
@@ -15,8 +15,9 @@ export const useSelector = <TState, TSelected>(
   const [value, setValue] = React.useState(selector(context.state));
 
   React.useEffect(() => {
-    const dispose = context.subscribe(selector, newValue => setValue(newValue));
-    return () => dispose();
+    const hook = new StateChangedHook(selector, newValue => setValue(newValue));
+    context.registerHook(hook);
+    return () => context.removeHook(hook);
   }, [selector]);
 
   return value;
