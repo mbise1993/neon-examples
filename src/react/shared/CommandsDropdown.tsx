@@ -10,13 +10,10 @@ import {
   MenuList,
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import { NeonApp } from 'neon2';
+import { useApp } from 'react-neon2';
 
-export interface CommandsDropdownProps {
-  app: NeonApp;
-}
-
-export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
+export const CommandsDropdown: React.FC = () => {
+  const app = useApp();
   const [isOpen, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
 

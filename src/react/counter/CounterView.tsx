@@ -17,12 +17,12 @@ export const CounterView: React.FC = () => {
       <Box display="flex" alignItems="center" padding={2}>
         <Typography>Count: {value}</Typography>
         <Box marginLeft={1}>
-          <IconButton disabled={!decrement.canExecute()} onClick={() => decrement.execute()}>
+          <IconButton disabled={!decrement.canExecute} onClick={() => decrement.execute()}>
             <DecrementIcon />
           </IconButton>
         </Box>
         <Box marginLeft={1}>
-          <IconButton disabled={!increment.canExecute()} onClick={() => increment.execute()}>
+          <IconButton disabled={!increment.canExecute} onClick={() => increment.execute()}>
             <IncrementIcon />
           </IconButton>
         </Box>

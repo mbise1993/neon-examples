@@ -7,7 +7,8 @@ export interface App {
   readonly providedCommands: Command<any>[];
   attachModule(module: Module<any>): void;
   detachModule(module: Module<any>): void;
-  executeCommandById(id: string): void;
+  getCommandProvider(commandId: string): Module<any>;
+  executeCommandById(commandId: string): void;
 }
 
 export interface ProvidedCommand {
@@ -64,10 +65,19 @@ export class NeonApp implements App {
     mod.onDidDetach && mod.onDidDetach(this);
   }
 
-  public executeCommandById(id: string) {
-    const provided = this._providedCommands[id];
+  public getCommandProvider(commandId: string) {
+    const provider = this._providedCommands[commandId];
+    if (!provider) {
+      throw new Error(`No provider registered for command with ID '${commandId}'`);
+    }
+
+    return provider.module;
+  }
+
+  public executeCommandById(commandId: string) {
+    const provided = this._providedCommands[commandId];
     if (!provided) {
-      throw new Error(`Command with ID '${id}' not provided by any attached modules`);
+      throw new Error(`Command with ID '${commandId}' not provided by any attached modules`);
     }
 
     provided.module.executeCommand(provided.command);

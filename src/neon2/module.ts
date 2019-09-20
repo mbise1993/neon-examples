@@ -1,6 +1,6 @@
 import { App } from './app';
 import { Context } from './context';
-import { Command } from './command';
+import { Command, CommandHooks } from './command';
 import { StateChangedHook } from './state';
 import { Hooks, HooksProvider } from './hooks';
 
@@ -16,11 +16,7 @@ export interface ModuleHooks<TState> {
   readonly contextDidDetach?: (context: Context<TState>) => void;
 }
 
-export interface CanExecuteChangedHook<TState> {
-  readonly onCanExecuteChanged?: (command: Command<TState>) => void;
-}
-
-type ModuleHooksType<TState> = ModuleHooks<TState> | CanExecuteChangedHook<TState>;
+type ModuleHooksType<TState> = ModuleHooks<TState> | CommandHooks<TState>;
 
 const isModuleHook = <TState>(hook: ModuleHooksType<TState>): hook is ModuleHooks<TState> => {
   return 'activeContextWillChange' in hook;
@@ -52,7 +48,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   private _keybindings: Record<string, string> = {};
   private _stateChangedHooks: StateChangedHook<TState, any>[] = [];
   private _moduleHooks = new Hooks<ModuleHooks<TState>>();
-  private _canExecuteChangedHooks = new Hooks<CanExecuteChangedHook<TState>>();
+  private _commandHooks = new Hooks<CommandHooks<TState>>();
 
   constructor(private _id: string, commands: Command<TState>[]) {
     commands.forEach(command => {
@@ -60,7 +56,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       command.requeryOnChange.forEach(selector => {
         this._stateChangedHooks.push(
           new StateChangedHook(selector, () =>
-            this._canExecuteChangedHooks.invoke('onCanExecuteChanged', [command]),
+            this._commandHooks.invoke('onCanExecuteChanged', [command]),
           ),
         );
       });
@@ -122,7 +118,9 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       throw new Error(`No active context, cannot execute command`);
     }
 
+    this._commandHooks.invoke('onWillExecute', [this.activeContext, command]);
     command.execute(this.activeContext);
+    this._commandHooks.invoke('onDidExecute', [this.activeContext, command]);
   }
 
   public canHandleKeyCode(keyCode: string) {
@@ -143,7 +141,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
     if (isModuleHook(hook)) {
       this._moduleHooks.register(hook);
     } else {
-      this._canExecuteChangedHooks.register(hook);
+      this._commandHooks.register(hook);
     }
   }
 
@@ -151,7 +149,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
     if (isModuleHook(hook)) {
       this._moduleHooks.remove(hook);
     } else {
-      this._canExecuteChangedHooks.remove(hook);
+      this._commandHooks.remove(hook);
     }
   }
 }

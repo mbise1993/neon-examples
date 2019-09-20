@@ -1,5 +1,5 @@
 import React from 'react';
-import { Command, StateChangedHook } from 'neon2';
+import { Command, StateChangedHook, CanExecuteChangedHook } from 'neon2';
 
 import { AppContext, ModuleContext } from './contexts';
 
@@ -24,19 +24,31 @@ export const useSelector = <TState, TSelected>(
 };
 
 export interface UseCommandResult {
-  canExecute(): boolean;
+  readonly canExecute: boolean;
   execute(): void;
 }
 
 export const useCommand = <TState>(command: Command<TState>): UseCommandResult => {
   const app = useApp();
+  const provider = app.getCommandProvider(command.id);
 
-  const canExecute = () => true;
+  const [canExecute, setCanExecute] = React.useState(provider.canExecuteCommand(command));
 
-  const execute = () => app.executeCommandById(command.id);
+  React.useEffect(() => {
+    const canExecuteChangedHook = new CanExecuteChangedHook<TState>(changed => {
+      if (changed.id === command.id) {
+        const updatedCanExecute = provider.canExecuteCommand(command);
+        if (updatedCanExecute !== canExecute) {
+          setCanExecute(updatedCanExecute);
+        }
+      }
+    });
+
+    provider.registerHook(canExecuteChangedHook);
+  }, [command, provider]);
 
   return {
     canExecute,
-    execute,
+    execute: () => provider.executeCommand(command),
   };
 };
