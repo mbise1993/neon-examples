@@ -1,30 +1,36 @@
-import { createCommand } from 'neon';
+import { Command, NeonCommands } from 'neon2';
 
-import { Counter } from './state';
+import { Counter } from './counterState';
+
+const increment: Command<Counter> = {
+  id: 'command.increment',
+  name: 'Increment',
+  keybinding: '=',
+  canExecute: () => true,
+  execute: context => {
+    return {
+      ...context.state,
+      value: context.state.value + 1,
+    };
+  },
+};
+
+const decrement: Command<Counter> = {
+  id: 'command.decrement',
+  name: 'Decrement',
+  keybinding: '-',
+  canExecute: context => context.state.value > 0,
+  execute: context => {
+    return {
+      ...context.state,
+      value: context.state.value - 1,
+    };
+  },
+};
 
 export const CounterCommands = {
-  increment: createCommand<Counter, {}>({
-    id: 'command.increment',
-    description: 'Increment the counter',
-    keybinding: '=',
-    execute: context => {
-      return {
-        ...context.state,
-        value: context.state.value + 1,
-      };
-    },
-  }),
-
-  decrement: createCommand<Counter, {}>({
-    id: 'command.decrement',
-    description: 'Decrement the counter',
-    keybinding: '-',
-    canExecute: context => context.state.value > 0,
-    execute: context => {
-      return {
-        ...context.state,
-        value: context.state.value - 1,
-      };
-    },
-  }),
+  increment,
+  decrement,
+  undo: NeonCommands.undo,
+  redo: NeonCommands.redo,
 };

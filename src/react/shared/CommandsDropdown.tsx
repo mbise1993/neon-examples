@@ -10,7 +10,7 @@ import {
   MenuList,
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import { NeonApp } from 'neon';
+import { NeonApp } from 'neon2';
 
 export interface CommandsDropdownProps {
   app: NeonApp;
@@ -45,9 +45,9 @@ export const CommandsDropdown: React.FC<CommandsDropdownProps> = ({ app }) => {
             <Paper id="menu-list-grow">
               <ClickAwayListener onClickAway={() => setOpen(false)}>
                 <MenuList>
-                  {app.commands.map(command => (
-                    <MenuItem key={command.id} onClick={() => app.executeCommand(command, {})}>
-                      {command.description}
+                  {app.providedCommands.map(command => (
+                    <MenuItem key={command.id} onClick={() => app.executeCommandById(command.id)}>
+                      {command.name}
                     </MenuItem>
                   ))}
                 </MenuList>

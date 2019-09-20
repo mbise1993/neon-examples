@@ -2,13 +2,13 @@ import React from 'react';
 import { Box, Card, IconButton, Typography } from '@material-ui/core';
 import IncrementIcon from '@material-ui/icons/Add';
 import DecrementIcon from '@material-ui/icons/Remove';
-import { useSelector, useCommand } from 'react-neon';
+import { useSelector, useCommand } from 'react-neon2';
 
-import { counterContext } from './counterContext';
+import { CounterContext } from './counterModule';
 import { CounterCommands } from './counterCommands';
 
 export const CounterView: React.FC = () => {
-  const value = useSelector(counterContext, state => state.value);
+  const value = useSelector(CounterContext, state => state.value);
   const increment = useCommand(CounterCommands.increment);
   const decrement = useCommand(CounterCommands.decrement);
 
@@ -17,12 +17,12 @@ export const CounterView: React.FC = () => {
       <Box display="flex" alignItems="center" padding={2}>
         <Typography>Count: {value}</Typography>
         <Box marginLeft={1}>
-          <IconButton disabled={!decrement.canExecute()} onClick={() => decrement.execute({})}>
+          <IconButton disabled={!decrement.canExecute()} onClick={() => decrement.execute()}>
             <DecrementIcon />
           </IconButton>
         </Box>
         <Box marginLeft={1}>
-          <IconButton disabled={!increment.canExecute()} onClick={() => increment.execute({})}>
+          <IconButton disabled={!increment.canExecute()} onClick={() => increment.execute()}>
             <IncrementIcon />
           </IconButton>
         </Box>

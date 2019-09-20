@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, AppBar, IconButton, Typography, Toolbar } from '@material-ui/core';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
-import { AppProvider, useCommand } from 'react-neon';
-import { NeonApp, NeonCommands } from 'neon';
+import { AppProvider, useCommand } from 'react-neon2';
+import { NeonApp, NeonCommands } from 'neon2';
 
 import { CommandsDropdown } from './CommandsDropdown';
 
@@ -31,7 +31,7 @@ export const AppContainer: React.FC<AppContainerProps> = ({ app, children }) => 
                 title="Undo"
                 color="inherit"
                 disabled={!undo.canExecute()}
-                onClick={() => undo.execute({})}
+                onClick={() => undo.execute()}
               >
                 <UndoIcon />
               </IconButton>
@@ -39,7 +39,7 @@ export const AppContainer: React.FC<AppContainerProps> = ({ app, children }) => 
                 title="Redo"
                 color="inherit"
                 disabled={!redo.canExecute()}
-                onClick={() => redo.execute({})}
+                onClick={() => redo.execute()}
               >
                 <RedoIcon />
               </IconButton>
