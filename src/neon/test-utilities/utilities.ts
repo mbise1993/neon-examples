@@ -32,6 +32,8 @@ export class TestModule extends AbstractModule<TestState> {
   }
 
   public createContext() {
-    return new NeonContext(`${this._moduleId}.context.${this._nextContextId}`, { value: 1 });
+    const id = this._nextContextId;
+    this._nextContextId++;
+    return new NeonContext(`${this._moduleId}.context.${id}`, { value: 1 });
   }
 }

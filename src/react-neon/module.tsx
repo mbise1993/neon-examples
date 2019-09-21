@@ -1,15 +1,5 @@
 import React from 'react';
-import { App, NeonApp, Module, Context } from 'neon';
-
-export const AppContext = React.createContext<App>(new NeonApp(''));
-
-export interface AppProviderProps {
-  app: App;
-}
-
-export const AppProvider: React.FC<AppProviderProps> = ({ app, children }) => {
-  return <AppContext.Provider value={app}>{children}</AppContext.Provider>;
-};
+import { Module, Context } from 'neon';
 
 export interface ModuleContext<TState> {
   ModuleProvider: React.ComponentType;
