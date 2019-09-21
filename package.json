@@ -2,6 +2,7 @@
   "name": "neon-examples",
   "version": "1.0.0",
   "description": "Example usages of the Neon framework",
+  "license": "MIT",
   "scripts": {
     "react:counter": "webpack-dev-server --entry ./src/react/counter/index.tsx --hot",
     "test": "jest --watch"
@@ -17,6 +18,8 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "@testing-library/react": "^9.1.4",
+    "@testing-library/react-hooks": "^2.0.1",
     "@types/jest": "^24.0.18",
     "@types/lodash": "^4.14.138",
     "@types/react": "^16.9.2",

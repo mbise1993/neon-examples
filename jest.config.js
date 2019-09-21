@@ -1,5 +1,5 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
-  setupFilesAfterEnv: ['./src/neon/setupTests.ts'],
+  moduleDirectories: ['<rootDir>/node_modules', '<rootDir>/src'],
+  setupFiles: ['./src/neon/setupTests.ts'],
 };
