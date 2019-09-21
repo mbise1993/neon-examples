@@ -2,10 +2,11 @@ import { Context, Command, CommandHooks, Module, ModuleHooks, StateHooks } from 
 import { History } from '../history';
 import { __config } from './config';
 
-export const mockCommand = (id: string): Command<any> => {
+export const mockCommand = (id: string, keybinding?: string): Command<any> => {
   return {
     id,
     name: id,
+    keybinding,
     requeryOnChange: [],
     canExecute: __config.mockFn(() => true),
     execute: __config.mockFn(),
@@ -43,29 +44,72 @@ export const mockModule = (id: string, providedCommands: Command<any>[] = []): M
   };
 };
 
-export const mockCommandHooks = (): CommandHooks<any> => {
+interface CommandHooksMock extends CommandHooks<any> {
+  readonly canExecuteChangedImpl: () => void;
+  readonly willExecuteImpl: () => void;
+  readonly didExecuteImpl: () => void;
+}
+
+export const mockCommandHooks = (): CommandHooksMock => {
+  const impls = {
+    canExecuteChangedImpl: __config.mockFn(),
+    willExecuteImpl: __config.mockFn(),
+    didExecuteImpl: __config.mockFn(),
+  };
+
   return {
-    onCanExecuteChanged: __config.mockFn(),
-    onWillExecute: __config.mockFn(),
-    onDidExecute: __config.mockFn(),
+    ...impls,
+    canExecuteChanged: command => impls.canExecuteChangedImpl(command),
+    willExecute: (context, command) => impls.willExecuteImpl(context, command),
+    didExecute: (context, command) => impls.didExecuteImpl(context, command),
   };
 };
 
-export const mockModuleHooks = (): ModuleHooks<any> => {
+interface ModuleHooksMock extends ModuleHooks<any> {
+  readonly willActivateContextImpl: () => void;
+  readonly didActivateContextImpl: () => void;
+  readonly willAttachContextImpl: () => void;
+  readonly didAttachContextImpl: () => void;
+  readonly willDetachContextImpl: () => void;
+  readonly didDetachContextImpl: () => void;
+}
+
+export const mockModuleHooks = (): ModuleHooksMock => {
+  const impls = {
+    willActivateContextImpl: __config.mockFn(),
+    didActivateContextImpl: __config.mockFn(),
+    willAttachContextImpl: __config.mockFn(),
+    didAttachContextImpl: __config.mockFn(),
+    willDetachContextImpl: __config.mockFn(),
+    didDetachContextImpl: __config.mockFn(),
+  };
+
   return {
-    activeContextWillChange: __config.mockFn(),
-    activeContextDidChange: __config.mockFn(),
-    contextWillAttach: __config.mockFn(),
-    contextDidAttach: __config.mockFn(),
-    contextWillDetach: __config.mockFn(),
-    contextDidDetach: __config.mockFn(),
+    ...impls,
+    willActivateContext: (current, next) => impls.willActivateContextImpl(current, next),
+    didActivateContext: context => impls.didActivateContextImpl(context),
+    willAttachContext: context => impls.willAttachContextImpl(context),
+    didAttachContext: context => impls.didAttachContextImpl(context),
+    willDetachContext: context => impls.willDetachContextImpl(context),
+    didDetachContext: context => impls.didDetachContextImpl(context),
   };
 };
 
-export const mockStateHooks = (): StateHooks<any, any> => {
+interface StateHooksMock extends StateHooks<any, any> {
+  readonly willChangeImpl: () => void;
+  readonly didChangeImpl: () => void;
+}
+
+export const mockStateHooks = (): StateHooksMock => {
+  const impls = {
+    willChangeImpl: __config.mockFn(),
+    didChangeImpl: __config.mockFn(),
+  };
+
   return {
+    ...impls,
     select: state => state,
-    onWillChange: __config.mockFn(),
-    onDidChange: __config.mockFn(),
+    willChange: (value, next) => impls.willChangeImpl(value, next),
+    didChange: (value, previous) => impls.didChangeImpl(value, previous),
   };
 };

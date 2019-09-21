@@ -33,30 +33,30 @@ describe('Context', () => {
 
   it('invokes registered command hooks', () => {
     const context = new NeonContext('test', { value: 1 });
-    const commandHooks = mockCommandHooks();
-    context.registerHook(commandHooks);
+    const hooks = mockCommandHooks();
+    context.registerHook(hooks);
     const command = mockCommand('command');
 
     context.execute(command);
-    expect(commandHooks.onWillExecute).toHaveBeenCalledTimes(1);
-    expect(commandHooks.onWillExecute).toHaveBeenCalledWith(context, command);
-    expect(commandHooks.onDidExecute).toHaveBeenCalledTimes(1);
-    expect(commandHooks.onDidExecute).toHaveBeenCalledWith(context, command);
+    expect(hooks.willExecuteImpl).toHaveBeenCalledTimes(1);
+    expect(hooks.willExecuteImpl).toHaveBeenCalledWith(context, command);
+    expect(hooks.didExecuteImpl).toHaveBeenCalledTimes(1);
+    expect(hooks.didExecuteImpl).toHaveBeenCalledWith(context, command);
   });
 
   it('invokes registered state hooks', () => {
     const context = new NeonContext('test', { value: 1 });
-    const stateHooks = mockStateHooks();
-    context.registerHook(stateHooks);
+    const hooks = mockStateHooks();
+    context.registerHook(hooks);
     const command = mockCommand('command');
     command.execute = jest.fn(() => ({
       value: 5,
     }));
 
     context.execute(command);
-    expect(stateHooks.onWillChange).toHaveBeenCalledTimes(1);
-    expect(stateHooks.onWillChange).toHaveBeenCalledWith({ value: 1 }, { value: 5 });
-    expect(stateHooks.onDidChange).toHaveBeenCalledTimes(1);
-    expect(stateHooks.onDidChange).toHaveBeenCalledWith({ value: 5 }, { value: 1 });
+    expect(hooks.willChangeImpl).toHaveBeenCalledTimes(1);
+    expect(hooks.willChangeImpl).toHaveBeenCalledWith({ value: 1 }, { value: 5 });
+    expect(hooks.didChangeImpl).toHaveBeenCalledTimes(1);
+    expect(hooks.didChangeImpl).toHaveBeenCalledWith({ value: 5 }, { value: 1 });
   });
 });

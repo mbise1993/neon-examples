@@ -19,7 +19,7 @@ export class History<TState> implements CommandHooks<TState> {
     this._futureFrames = new FixedStack<HistoryFrame<TState>>(Array, capacity);
   }
 
-  public onWillExecute(_context: Context<TState>, command: Command<TState>) {
+  public willExecute(_context: Context<TState>, command: Command<TState>) {
     if (command.supportsUndo) {
       this._futureFrames.clear();
       this.push(command);

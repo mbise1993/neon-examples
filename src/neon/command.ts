@@ -17,15 +17,15 @@ export interface CommandRouter<TArgs> {
 }
 
 export interface CommandHooks<TState> {
-  readonly onCanExecuteChanged?: (command: Command<TState>) => void;
-  readonly onWillExecute?: (context: Context<TState>, command: Command<TState>) => void;
-  readonly onDidExecute?: (context: Context<TState>, command: Command<TState>) => void;
+  readonly canExecuteChanged?: (command: Command<TState>) => void;
+  readonly willExecute?: (context: Context<TState>, command: Command<TState>) => void;
+  readonly didExecute?: (context: Context<TState>, command: Command<TState>) => void;
 }
 
 export class CanExecuteChangedHook<TState> implements CommandHooks<TState> {
-  constructor(private _handler: Required<CommandHooks<TState>>['onCanExecuteChanged']) {}
+  constructor(private _handler: Required<CommandHooks<TState>>['canExecuteChanged']) {}
 
-  public onCanExecuteChanged(command: Command<TState>) {
+  public canExecuteChanged(command: Command<TState>) {
     this._handler(command);
   }
 }

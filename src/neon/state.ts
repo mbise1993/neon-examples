@@ -8,21 +8,21 @@ export interface StateProvider<TState> {
 
 export interface StateHooks<TState, TSelected> {
   select(state: TState): TSelected;
-  readonly onWillChange?: (value: TSelected, nextValue: TSelected) => void;
-  readonly onDidChange?: (value: TSelected, previousValue: TSelected) => void;
+  readonly willChange?: (value: TSelected, nextValue: TSelected) => void;
+  readonly didChange?: (value: TSelected, previousValue: TSelected) => void;
 }
 
 export class StateChangedHook<TState, TSelected> implements StateHooks<TState, TSelected> {
   constructor(
     private _selector: StateHooks<TState, TSelected>['select'],
-    private _handler: Required<StateHooks<TState, TSelected>>['onDidChange'],
+    private _handler: Required<StateHooks<TState, TSelected>>['didChange'],
   ) {}
 
   public select(state: TState) {
     return this._selector(state);
   }
 
-  public onDidChange(value: TSelected, previousValue: TSelected) {
+  public didChange(value: TSelected, previousValue: TSelected) {
     this._handler(value, previousValue);
   }
 }

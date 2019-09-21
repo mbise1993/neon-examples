@@ -52,9 +52,9 @@ export class NeonContext<TState> implements Context<TState> {
       throw new Error(`Context '${this.id}' cannot execute command '${command.id}'`);
     }
 
-    this._commandHooks.forEach(hook => hook.onWillExecute && hook.onWillExecute(this, command));
+    this._commandHooks.forEach(hook => hook.willExecute && hook.willExecute(this, command));
     const newState = command.execute(this);
-    this._commandHooks.forEach(hook => hook.onDidExecute && hook.onDidExecute(this, command));
+    this._commandHooks.forEach(hook => hook.didExecute && hook.didExecute(this, command));
 
     this.setState(newState);
   }
@@ -83,8 +83,8 @@ export class NeonContext<TState> implements Context<TState> {
       const value = hook.select(stateClone);
       const nextValue = hook.select(newState);
       if (value !== nextValue) {
-        hook.onWillChange && hook.onWillChange(value, nextValue);
-        executeAfterChange.push(() => hook.onDidChange && hook.onDidChange(nextValue, value));
+        hook.willChange && hook.willChange(value, nextValue);
+        executeAfterChange.push(() => hook.didChange && hook.didChange(nextValue, value));
       }
     });
 

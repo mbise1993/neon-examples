@@ -5,21 +5,21 @@ import { StateChangedHook } from './state';
 import { Hooks, HooksProvider } from './hooks';
 
 export interface ModuleHooks<TState> {
-  readonly activeContextWillChange?: (
+  readonly willActivateContext?: (
     current: Context<TState> | undefined,
     next: Context<TState>,
   ) => void;
-  readonly activeContextDidChange?: (context: Context<TState>) => void;
-  readonly contextWillAttach?: (context: Context<TState>) => void;
-  readonly contextDidAttach?: (context: Context<TState>) => void;
-  readonly contextWillDetach?: (context: Context<TState>) => void;
-  readonly contextDidDetach?: (context: Context<TState>) => void;
+  readonly didActivateContext?: (context: Context<TState>) => void;
+  readonly willAttachContext?: (context: Context<TState>) => void;
+  readonly didAttachContext?: (context: Context<TState>) => void;
+  readonly willDetachContext?: (context: Context<TState>) => void;
+  readonly didDetachContext?: (context: Context<TState>) => void;
 }
 
 type ModuleHooksType<TState> = ModuleHooks<TState> | CommandHooks<TState>;
 
 const isModuleHook = <TState>(hook: ModuleHooksType<TState>): hook is ModuleHooks<TState> => {
-  return 'activeContextWillChange' in hook;
+  return 'willActivateContext' in hook;
 };
 
 export interface Module<TState> extends HooksProvider<ModuleHooksType<TState>> {
@@ -60,7 +60,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       command.requeryOnChange.forEach(selector => {
         this._stateChangedHooks.push(
           new StateChangedHook(selector, () =>
-            this._commandHooks.invoke('onCanExecuteChanged', [command]),
+            this._commandHooks.invoke('canExecuteChanged', [command]),
           ),
         );
       });
@@ -86,15 +86,15 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   public abstract createContext(): Context<TState>;
 
   public attachContext(context: Context<TState>) {
-    this._moduleHooks.invoke('contextWillAttach', [context]);
+    this._moduleHooks.invoke('willAttachContext', [context]);
     this._contexts[context.id] = context;
-    this._moduleHooks.invoke('contextDidAttach', [context]);
+    this._moduleHooks.invoke('didAttachContext', [context]);
   }
 
   public detachContext(context: Context<TState>) {
-    this._moduleHooks.invoke('contextWillDetach', [context]);
+    this._moduleHooks.invoke('willDetachContext', [context]);
     delete this._contexts[context.id];
-    this._moduleHooks.invoke('contextDidDetach', [context]);
+    this._moduleHooks.invoke('didDetachContext', [context]);
   }
 
   public activateContext(context: Context<TState>) {
@@ -104,16 +104,16 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       }
     }
 
-    this._moduleHooks.invoke('activeContextWillChange', [this._activeContext, context]);
+    this._moduleHooks.invoke('willActivateContext', [this._activeContext, context]);
     this._activeContext = context;
-    this._moduleHooks.invoke('activeContextDidChange', [this._activeContext]);
+    this._moduleHooks.invoke('didActivateContext', [this._activeContext]);
 
     for (const hook of this._stateChangedHooks) {
       this._activeContext.registerHook(hook);
     }
 
     Object.values(this._commands).forEach(command =>
-      this._commandHooks.invoke('onCanExecuteChanged', [command]),
+      this._commandHooks.invoke('canExecuteChanged', [command]),
     );
   }
 
@@ -122,13 +122,13 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   }
 
   public executeCommand(command: Command<TState>) {
-    if (!this.activeContext || !this.canExecuteCommand(command)) {
-      throw new Error(`Cannot execute command '${command.id}'`);
+    if (!this.activeContext) {
+      throw new Error(`No active context, cannot execute command`);
     }
 
-    this._commandHooks.invoke('onWillExecute', [this.activeContext, command]);
+    this._commandHooks.invoke('willExecute', [this.activeContext, command]);
     this.activeContext.execute(command);
-    this._commandHooks.invoke('onDidExecute', [this.activeContext, command]);
+    this._commandHooks.invoke('didExecute', [this.activeContext, command]);
   }
 
   public canHandleKeyCode(keyCode: string) {
