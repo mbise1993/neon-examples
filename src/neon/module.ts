@@ -60,7 +60,7 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       command.requeryOnChange.forEach(selector => {
         this._stateChangedHooks.push(
           new StateChangedHook(selector, () =>
-            this._commandHooks.invoke('canExecuteChanged', [command]),
+            this._commandHooks.invokeAll('canExecuteChanged', [command]),
           ),
         );
       });
@@ -86,15 +86,15 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   public abstract createContext(): Context<TState>;
 
   public attachContext(context: Context<TState>) {
-    this._moduleHooks.invoke('willAttachContext', [context]);
+    this._moduleHooks.invokeAll('willAttachContext', [context]);
     this._contexts[context.id] = context;
-    this._moduleHooks.invoke('didAttachContext', [context]);
+    this._moduleHooks.invokeAll('didAttachContext', [context]);
   }
 
   public detachContext(context: Context<TState>) {
-    this._moduleHooks.invoke('willDetachContext', [context]);
+    this._moduleHooks.invokeAll('willDetachContext', [context]);
     delete this._contexts[context.id];
-    this._moduleHooks.invoke('didDetachContext', [context]);
+    this._moduleHooks.invokeAll('didDetachContext', [context]);
   }
 
   public activateContext(context: Context<TState>) {
@@ -104,16 +104,16 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       }
     }
 
-    this._moduleHooks.invoke('willActivateContext', [this._activeContext, context]);
+    this._moduleHooks.invokeAll('willActivateContext', [this._activeContext, context]);
     this._activeContext = context;
-    this._moduleHooks.invoke('didActivateContext', [this._activeContext]);
+    this._moduleHooks.invokeAll('didActivateContext', [this._activeContext]);
 
     for (const hook of this._stateChangedHooks) {
       this._activeContext.registerHook(hook);
     }
 
     Object.values(this._commands).forEach(command =>
-      this._commandHooks.invoke('canExecuteChanged', [command]),
+      this._commandHooks.invokeAll('canExecuteChanged', [command]),
     );
   }
 
@@ -126,9 +126,9 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       throw new Error(`No active context, cannot execute command`);
     }
 
-    this._commandHooks.invoke('willExecute', [this.activeContext, command]);
+    this._commandHooks.invokeAll('willExecute', [this.activeContext, command]);
     this.activeContext.execute(command);
-    this._commandHooks.invoke('didExecute', [this.activeContext, command]);
+    this._commandHooks.invokeAll('didExecute', [this.activeContext, command]);
   }
 
   public canHandleKeyCode(keyCode: string) {

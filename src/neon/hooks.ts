@@ -1,5 +1,7 @@
 import { pull } from 'lodash';
 
+type ArgsType<TFunc> = TFunc extends (...args: any) => any ? Parameters<TFunc> : never;
+
 export interface HooksProvider<THooks> {
   registerHook(hook: THooks): void;
   removeHook(hook: THooks): void;
@@ -16,9 +18,9 @@ export class Hooks<THook extends object> {
     pull(this._hooks, hook);
   }
 
-  public invoke<TName extends keyof THook, TFunc = THook[TName]>(
+  public invokeAll<TName extends keyof THook, TFunc = THook[TName]>(
     name: TName,
-    args: TFunc extends (...args: any) => any ? Parameters<TFunc> : never,
+    args: ArgsType<TFunc>,
   ) {
     for (const hook of this._hooks) {
       const method = hook[name];
@@ -26,5 +28,9 @@ export class Hooks<THook extends object> {
         method.apply(hook, args);
       }
     }
+  }
+
+  public forEach(callback: (hook: THook) => void) {
+    this._hooks.forEach(callback);
   }
 }

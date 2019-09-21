@@ -16,8 +16,8 @@ describe('Hooks', () => {
 
     const hooks = new Hooks<TestHooks>();
     hooks.register(testHooks);
-    hooks.invoke('foo', ['foo-test']);
-    hooks.invoke('bar', ['bar-test']);
+    hooks.invokeAll('foo', ['foo-test']);
+    hooks.invokeAll('bar', ['bar-test']);
 
     expect(fooImpl).toHaveBeenCalledTimes(1);
     expect(fooImpl).toHaveBeenCalledWith('foo-test');

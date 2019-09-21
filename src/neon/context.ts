@@ -1,29 +1,32 @@
-import { cloneDeep, pull } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { Command, CommandHooks } from './command';
 import { StateProvider, StateHooks } from './state';
 import { History } from './history';
+import { Hooks, HooksProvider } from './hooks';
 
-type ContextHooks<TState> = StateHooks<TState, any> | CommandHooks<TState>;
+type ContextHooksType<TState> = StateHooks<TState, any> | CommandHooks<TState>;
 
-const isStateHook = <TState>(hook: ContextHooks<TState>): hook is StateHooks<TState, any> => {
+const isStateHook = <TState>(hook: ContextHooksType<TState>): hook is StateHooks<TState, any> => {
   return 'select' in hook;
 };
 
-export interface Context<TState> extends StateProvider<TState> {
+export interface Context<TState>
+  extends StateProvider<TState>,
+    HooksProvider<ContextHooksType<TState>> {
   readonly id: string;
   readonly history: History<TState>;
   canExecute(command: Command<TState>): boolean;
   execute(command: Command<TState>): void;
-  registerHook(hook: ContextHooks<TState>): void;
-  removeHook(hook: ContextHooks<TState>): void;
+  registerHook(hook: ContextHooksType<TState>): void;
+  removeHook(hook: ContextHooksType<TState>): void;
 }
 
 export class NeonContext<TState> implements Context<TState> {
   private _state: TState;
   private _history: History<TState>;
-  private _stateHooks: StateHooks<TState, any>[] = [];
-  private _commandHooks: CommandHooks<TState>[] = [];
+  private _stateHooks = new Hooks<StateHooks<TState, any>>();
+  private _commandHooks = new Hooks<CommandHooks<TState>>();
 
   constructor(private _id: string, initialState: TState) {
     this._state = cloneDeep(initialState);
@@ -52,26 +55,26 @@ export class NeonContext<TState> implements Context<TState> {
       throw new Error(`Context '${this.id}' cannot execute command '${command.id}'`);
     }
 
-    this._commandHooks.forEach(hook => hook.willExecute && hook.willExecute(this, command));
+    this._commandHooks.invokeAll('willExecute', [this, command]);
     const newState = command.execute(this);
-    this._commandHooks.forEach(hook => hook.didExecute && hook.didExecute(this, command));
+    this._commandHooks.invokeAll('didExecute', [this, command]);
 
     this.setState(newState);
   }
 
-  public registerHook(hook: ContextHooks<TState>) {
+  public registerHook(hook: ContextHooksType<TState>) {
     if (isStateHook(hook)) {
-      this._stateHooks.push(hook);
+      this._stateHooks.register(hook);
     } else {
-      this._commandHooks.push(hook);
+      this._commandHooks.register(hook);
     }
   }
 
-  public removeHook(hook: ContextHooks<TState>) {
+  public removeHook(hook: ContextHooksType<TState>) {
     if (isStateHook(hook)) {
-      pull(this._stateHooks, hook);
+      this._stateHooks.remove(hook);
     } else {
-      pull(this._commandHooks, hook);
+      this._commandHooks.remove(hook);
     }
   }
 
