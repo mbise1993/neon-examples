@@ -1,81 +1,36 @@
-import { Command, CommandInfo, CommandArgsType, createCommand } from './command';
+import { cloneDeep, pull } from 'lodash';
+
+import { Command, CommandHooks } from './command';
+import { StateHooks } from './state';
 import { History } from './history';
-import { Service, ServiceType } from './service';
-import { NeonApp } from './app';
-import { EventEmitter } from './eventEmitter';
 
-export interface Selector<TState, TSelected> {
-  (state: TState): TSelected;
-}
+type ContextHooks<TState> = StateHooks<TState, any> | CommandHooks<TState>;
 
-export interface Handler<TSelected> {
-  (value: TSelected): void;
-}
-
-export interface StateChangeData<TState, TSelected> {
-  selector: Selector<TState, TSelected>;
-  handler: Handler<TSelected>;
-}
-
-export interface RequeryCanExecuteData<TState> {
-  command: Command<TState, any>;
-  handler: RequeryCanExecuteHandler<TState>;
-}
-
-export interface RequeryCanExecuteHandler<TState> {
-  (command: Command<TState, any>): void;
-}
-
-export const NeonCommands = {
-  undo: createCommand<any, any>({
-    id: 'command.undo',
-    description: 'Undo',
-    requeryOnChange: [state => state],
-    canExecute: context => context.history.hasPastFrames(),
-    execute: context => context.history.goBack(1),
-  }),
-  redo: createCommand<any, any>({
-    id: 'command.redo',
-    description: 'Redo',
-    requeryOnChange: [state => state],
-    canExecute: context => context.history.hasFutureFrames(),
-    execute: context => context.history.goForward(1),
-  }),
+const isStateHook = <TState>(hook: ContextHooks<TState>): hook is StateHooks<TState, any> => {
+  return 'select' in hook;
 };
 
 export interface Context<TState> {
   readonly id: string;
   readonly state: TState;
   readonly history: History<TState>;
-  readonly commands: Command<TState, any>[];
-  getService<T extends ServiceType>(type: T): InstanceType<T>;
-  canHandleCommand(command: CommandInfo): boolean;
-  executeCommand<TCommand extends Command<any, any>>(
-    command: TCommand,
-    args: CommandArgsType<TCommand>,
-  ): void;
-  onStateChange<TSelected>(
-    selector: Selector<TState, TSelected>,
-    handler: Handler<TSelected>,
-  ): () => void;
-  onRequeryCanExecute(
-    command: Command<TState, any>,
-    handler: RequeryCanExecuteHandler<TState>,
-  ): () => void;
-  onWillAttach?: (app: NeonApp) => void;
-  onDidAttach?: (app: NeonApp) => void;
-  onWillDetach?: (app: NeonApp) => void;
-  onDidDetach?: (app: NeonApp) => void;
+  canExecute(command: Command<TState>): boolean;
+  execute(command: Command<TState>): void;
+  registerHook(hook: ContextHooks<TState>): void;
+  removeHook(hook: ContextHooks<TState>): void;
 }
 
 export class NeonContext<TState> implements Context<TState> {
-  private _services: Record<string, Service> = {};
-  private _commands: Record<string, Command<TState, any>> = {};
-  private _stateChangeEmitter = new EventEmitter<StateChangeData<TState, any>>();
-  private _requeryCanExecuteEmitter = new EventEmitter<RequeryCanExecuteData<TState>>();
-  private _history = new History<TState>(20, () => this.state);
+  private _state: TState;
+  private _history: History<TState>;
+  private _stateHooks: StateHooks<TState, any>[] = [];
+  private _commandHooks: CommandHooks<TState>[] = [];
 
-  constructor(private _id: string, private _state: TState) {}
+  constructor(private _id: string, initialState: TState) {
+    this._state = cloneDeep(initialState);
+    this._history = new History(this, 20);
+    this.registerHook(this._history);
+  }
 
   public get id() {
     return this._id;
@@ -89,104 +44,49 @@ export class NeonContext<TState> implements Context<TState> {
     return this._history;
   }
 
-  public get commands() {
-    return Object.values(this._commands);
+  public canExecute(command: Command<TState>): boolean {
+    return command.canExecute(this);
   }
 
-  public getService<T extends ServiceType>(type: T): InstanceType<T> {
-    const service = this._services[type.id];
-    if (service instanceof type) {
-      return service as InstanceType<T>;
-    }
+  public execute(command: Command<TState>) {
+    this._commandHooks.forEach(hook => hook.onWillExecute && hook.onWillExecute(this, command));
+    const newState = command.execute(this);
+    this._commandHooks.forEach(hook => hook.onDidExecute && hook.onDidExecute(this, command));
 
-    throw new Error(`Service registered with ID '${type.id}' does not match type '${type.name}'`);
-  }
-
-  public registerService(service: Service) {
-    this._services[service.id] = service;
-  }
-
-  public handleCommands(...commands: Command<TState, any>[]) {
-    commands.forEach(command => {
-      this._commands[command.id] = command;
-      command.requeryOnChange.map(selector =>
-        this.onStateChange(selector, () => {
-          this._requeryCanExecuteEmitter.subscriptions.forEach(sub => {
-            if (sub.data.command === command) {
-              sub.data.handler(command);
-            }
-          });
-        }),
-      );
-    });
-  }
-
-  public canHandleCommand(commandInfo: CommandInfo): boolean {
-    const command = this._commands[commandInfo.id];
-    return command && command.canExecute(this);
-  }
-
-  public executeCommand<TCommand extends Command<any, any>>(
-    type: TCommand,
-    args: CommandArgsType<TCommand>,
-  ) {
-    if (!this.canHandleCommand(type)) {
-      throw new Error(`Context '${this.id}' cannot execute command '${type.id}'`);
-    }
-
-    const command = this._commands[type.id];
-    if (command.supportsUndo) {
-      this._history.push(command.description);
-    }
-
-    const newState = command.execute(this, args);
     this.setState(newState);
   }
 
-  public onStateChange<TSelected>(
-    selector: Selector<TState, TSelected>,
-    handler: Handler<TSelected>,
-  ) {
-    return this._stateChangeEmitter.subscribe({
-      selector,
-      handler,
-    });
+  public registerHook(hook: ContextHooks<TState>) {
+    if (isStateHook(hook)) {
+      this._stateHooks.push(hook);
+    } else {
+      this._commandHooks.push(hook);
+    }
   }
 
-  public onRequeryCanExecute(
-    command: Command<TState, any>,
-    handler: RequeryCanExecuteHandler<TState>,
-  ) {
-    return this._requeryCanExecuteEmitter.subscribe({
-      command,
-      handler,
-    });
-  }
-
-  public onDetach() {
-    this._stateChangeEmitter.unsubscribeAll();
-    this._requeryCanExecuteEmitter.unsubscribeAll();
+  public removeHook(hook: ContextHooks<TState>) {
+    if (isStateHook(hook)) {
+      pull(this._stateHooks, hook);
+    } else {
+      pull(this._commandHooks, hook);
+    }
   }
 
   private setState(newState: TState) {
-    const subscribersToNotify: StateChangeData<TState, any>[] = [];
-    this._stateChangeEmitter.subscriptions.forEach(subscription => {
-      const value = subscription.data.selector(this._state);
-      const newValue = subscription.data.selector(newState);
-      if (value !== newValue) {
-        subscribersToNotify.push(subscription.data);
+    const stateClone = cloneDeep(this.state);
+    const executeAfterChange = new Array<() => void>();
+
+    this._stateHooks.forEach(hook => {
+      const value = hook.select(stateClone);
+      const nextValue = hook.select(newState);
+      if (value !== nextValue) {
+        hook.onWillChange && hook.onWillChange(value, nextValue);
+        executeAfterChange.push(() => hook.onDidChange && hook.onDidChange(nextValue, value));
       }
     });
 
     this._state = newState;
 
-    subscribersToNotify.forEach(subscriber => {
-      const value = subscriber.selector(this._state);
-      subscriber.handler(value);
-    });
+    executeAfterChange.forEach(func => func());
   }
-}
-
-export interface DomainContextType<TState> {
-  new (...args: any): Context<TState>;
 }

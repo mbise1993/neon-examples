@@ -1,70 +1,70 @@
 import React from 'react';
-import { NeonApp, Context } from 'neon';
+import { App, NeonApp, Module, Context } from 'neon';
 
-export const AppContext = React.createContext<NeonApp>(new NeonApp(''));
+export const AppContext = React.createContext<App>(new NeonApp(''));
 
 export interface AppProviderProps {
-  app: NeonApp;
+  app: App;
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ app, children }) => {
   return <AppContext.Provider value={app}>{children}</AppContext.Provider>;
 };
 
-interface NeonContextContainerProps<TState> extends React.HTMLProps<HTMLDivElement> {
-  readonly context: Context<TState>;
+export interface ModuleContext<TState> {
+  ModuleProvider: React.ComponentType;
+  NewContextContainer: React.ComponentType;
+  useModule: () => Module<TState>;
+  useContext: () => Context<TState>;
 }
 
-function NeonContextContainer<TState>({
-  context,
-  children,
-  ...rest
-}: NeonContextContainerProps<TState>) {
-  const app = React.useContext(AppContext);
-  const containerRef = React.useRef() as React.MutableRefObject<HTMLDivElement>;
+export function createModuleContext<TState>(mod: Module<TState>): ModuleContext<TState> {
+  const ReactModuleContext = React.createContext(mod);
 
-  const handleKeyPress = (e: KeyboardEvent) => {
-    app.handleKeyCode(e.key);
+  const ModuleProvider: React.FC = ({ children }) => {
+    return <ReactModuleContext.Provider value={mod}>{children}</ReactModuleContext.Provider>;
   };
 
-  React.useLayoutEffect(() => {
-    const { current } = containerRef;
-    if (!current) {
-      throw new Error('Unabled to get ref container');
-    }
+  const ReactContextContext = React.createContext(mod.createContext());
 
-    current.addEventListener('keypress', handleKeyPress);
+  const NewContextContainer: React.FC<React.HTMLProps<HTMLDivElement>> = ({
+    children,
+    ...rest
+  }) => {
+    const containerRef = React.useRef() as React.MutableRefObject<HTMLDivElement>;
 
-    return () => current.removeEventListener('keypress', handleKeyPress);
-  }, [children, handleKeyPress]);
+    const newContext = mod.createContext();
+    mod.attachContext(newContext);
+    mod.activateContext(newContext);
 
-  return (
-    <div ref={containerRef} tabIndex={-1} {...rest}>
-      {children}
-    </div>
-  );
-}
+    React.useLayoutEffect(() => {
+      const { current } = containerRef;
+      if (!current) {
+        throw new Error('Unabled to get ref container');
+      }
 
-export interface NeonContext<TState> {
-  Container: React.ComponentType<React.HTMLProps<HTMLDivElement>>;
-  useContext(): Context<TState>;
-}
+      const handleKeyPress = (e: KeyboardEvent) => {
+        mod.handleKeyCode(e.key);
+      };
 
-export function createNeonContext<TState>(context: Context<TState>): NeonContext<TState> {
-  const ReactContext = React.createContext(context);
+      current.addEventListener('keypress', handleKeyPress);
 
-  const Container: React.FC<React.HTMLProps<HTMLDivElement>> = ({ children, ...rest }) => {
+      return () => current.removeEventListener('keypress', handleKeyPress);
+    }, [children]);
+
     return (
-      <ReactContext.Provider value={context}>
-        <NeonContextContainer<TState> context={context} {...rest}>
+      <ReactContextContext.Provider value={newContext}>
+        <div ref={containerRef} tabIndex={-1} {...rest}>
           {children}
-        </NeonContextContainer>
-      </ReactContext.Provider>
+        </div>
+      </ReactContextContext.Provider>
     );
   };
 
   return {
-    Container,
-    useContext: () => React.useContext(ReactContext),
+    ModuleProvider,
+    NewContextContainer,
+    useModule: () => React.useContext(ReactModuleContext),
+    useContext: () => React.useContext(ReactContextContext),
   };
 }

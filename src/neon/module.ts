@@ -53,6 +53,10 @@ export abstract class AbstractModule<TState> implements Module<TState> {
   constructor(private _id: string, commands: Command<TState>[]) {
     commands.forEach(command => {
       this._commands[command.id] = command;
+      if (command.keybinding) {
+        this._keybindings[command.keybinding] = command.id;
+      }
+
       command.requeryOnChange.forEach(selector => {
         this._stateChangedHooks.push(
           new StateChangedHook(selector, () =>
@@ -107,19 +111,23 @@ export abstract class AbstractModule<TState> implements Module<TState> {
     for (const hook of this._stateChangedHooks) {
       this._activeContext.registerHook(hook);
     }
+
+    Object.values(this._commands).forEach(command =>
+      this._commandHooks.invoke('onCanExecuteChanged', [command]),
+    );
   }
 
   public canExecuteCommand(command: Command<TState>) {
-    return this.activeContext ? command.canExecute(this.activeContext) : false;
+    return this.activeContext ? this.activeContext.canExecute(command) : false;
   }
 
   public executeCommand(command: Command<TState>) {
-    if (!this.activeContext) {
-      throw new Error(`No active context, cannot execute command`);
+    if (!this.activeContext || !this.canExecuteCommand(command)) {
+      throw new Error(`Cannot execute command '${command.id}'`);
     }
 
     this._commandHooks.invoke('onWillExecute', [this.activeContext, command]);
-    command.execute(this.activeContext);
+    this.activeContext.execute(command);
     this._commandHooks.invoke('onDidExecute', [this.activeContext, command]);
   }
 
@@ -134,7 +142,10 @@ export abstract class AbstractModule<TState> implements Module<TState> {
       throw new Error(`Module '${this.id}' cannot handle key code '${keyCode}'`);
     }
 
-    this.executeCommand(this._commands[commandId]);
+    const command = this._commands[commandId];
+    if (this.canExecuteCommand(command)) {
+      this.executeCommand(command);
+    }
   }
 
   public registerHook(hook: ModuleHooksType<TState>) {

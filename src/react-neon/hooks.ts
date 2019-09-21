@@ -1,44 +1,57 @@
 import React from 'react';
-import { Command, CommandArgsType, Context } from 'neon';
+import { Command, StateChangedHook, CanExecuteChangedHook } from 'neon';
 
-import { AppContext } from './contexts';
+import { AppContext, ModuleContext } from './contexts';
 
 export const useApp = () => {
   return React.useContext(AppContext);
 };
 
 export const useSelector = <TState, TSelected>(
-  context: Context<TState>,
+  moduleContext: ModuleContext<TState>,
   selector: (state: TState) => TSelected,
 ): TSelected => {
+  const context = moduleContext.useContext();
   const [value, setValue] = React.useState(selector(context.state));
 
   React.useEffect(() => {
-    const dispose = context.onStateChange(selector, newValue => setValue(newValue));
-    return () => dispose();
+    const hook = new StateChangedHook(selector, newValue => {
+      setValue(newValue);
+    });
+    context.registerHook(hook);
+    return () => context.removeHook(hook);
   }, [selector]);
 
   return value;
 };
 
-export interface UseCommandResult<TCommand extends Command<any, any>> {
-  canExecute: () => boolean;
-  execute: (args: CommandArgsType<TCommand>) => void;
+export interface UseCommandResult {
+  readonly canExecute: boolean;
+  execute(): void;
 }
 
-export const useCommand = <C extends Command<any, any>>(command: C): UseCommandResult<C> => {
+export const useCommand = <TState>(command: Command<TState>): UseCommandResult => {
   const app = useApp();
+  const provider = app.getCommandProvider(command.id);
 
-  const canExecute = (): boolean => {
-    return !!app.activeContext && app.activeContext.canHandleCommand(command);
-  };
+  const [canExecute, setCanExecute] = React.useState(true);
 
-  const execute = (args: CommandArgsType<C>) => {
-    app.activeContext && app.activeContext.executeCommand(command, args);
-  };
+  React.useEffect(() => {
+    setCanExecute(provider.canExecuteCommand(command));
+
+    const canExecuteChangedHook = new CanExecuteChangedHook<TState>(changed => {
+      if (changed.id === command.id) {
+        setCanExecute(provider.canExecuteCommand(command));
+      }
+    });
+
+    provider.registerHook(canExecuteChangedHook);
+
+    return () => provider.removeHook(canExecuteChangedHook);
+  }, [command, provider]);
 
   return {
     canExecute,
-    execute,
+    execute: () => provider.executeCommand(command),
   };
 };

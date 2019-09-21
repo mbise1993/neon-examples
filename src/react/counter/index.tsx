@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { NeonApp } from 'neon2';
-import { AppProvider } from 'react-neon2';
+import { NeonApp, AppProvider } from 'react-neon';
 
 import { counterModule, CounterContext } from './counterModule';
 import { AppContainer } from '../shared/AppContainer';

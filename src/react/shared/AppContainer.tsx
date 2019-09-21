@@ -2,8 +2,7 @@ import React from 'react';
 import { Box, AppBar, IconButton, Typography, Toolbar } from '@material-ui/core';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
-import { useApp, useCommand } from 'react-neon2';
-import { NeonCommands } from 'neon2';
+import { useApp, useCommand, NeonCommands } from 'react-neon';
 
 import { CommandsDropdown } from './CommandsDropdown';
 

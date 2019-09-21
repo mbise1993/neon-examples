@@ -1,11 +1,24 @@
-import { uniqBy } from 'lodash';
+import { Module } from './module';
+import { Command } from './command';
 
-import { Context } from './context';
-import { Command, CommandArgsType } from './command';
+export interface App {
+  readonly name: string;
+  readonly modules: Module<any>[];
+  readonly providedCommands: Command<any>[];
+  attachModule(module: Module<any>): void;
+  detachModule(module: Module<any>): void;
+  getCommandProvider(commandId: string): Module<any>;
+  executeCommandById(commandId: string): void;
+}
 
-export class NeonApp {
-  private _contexts: Record<string, Context<any>> = {};
-  private _activeContext?: Context<any>;
+export interface ProvidedCommand {
+  readonly module: Module<any>;
+  readonly command: Command<any>;
+}
+
+export class NeonApp implements App {
+  private _modules: Record<string, Module<any>> = {};
+  private _providedCommands: Record<string, ProvidedCommand> = {};
 
   constructor(private _name: string) {}
 
@@ -13,53 +26,60 @@ export class NeonApp {
     return this._name;
   }
 
-  public get commands() {
-    const allCommands = Object.values(this._contexts).reduce(
-      (arr, context) => {
-        arr.push(...context.commands);
-        return arr;
-      },
-      [] as Command<any, any>[],
-    );
-
-    return uniqBy(allCommands, command => command.id);
+  public get modules() {
+    return Object.values(this._modules);
   }
 
-  public get activeContext() {
-    return this._activeContext;
+  public get providedCommands() {
+    return Object.values(this._providedCommands).map(provided => provided.command);
   }
 
-  public executeCommand<C extends Command<any, any>>(command: C, args: CommandArgsType<C>) {
-    if (this.activeContext) {
-      this.activeContext.executeCommand(command, args);
+  public attachModule(mod: Module<any>) {
+    if (this._modules[mod.id]) {
+      throw new Error(`Module with ID '${mod.id}' already attached`);
     }
+
+    mod.onWillAttach && mod.onWillAttach(this);
+
+    this._modules[mod.id] = mod;
+    mod.providedCommands.forEach(command => {
+      this._providedCommands[command.id] = {
+        module: mod,
+        command,
+      };
+    });
+
+    mod.onDidAttach && mod.onDidAttach(this);
   }
 
-  public attachContext(context: Context<any>) {
-    context.onWillAttach && context.onWillAttach(this);
-    this._contexts[context.id] = context;
-    context.onDidAttach && context.onDidAttach(this);
-    this.activateContext(context);
-  }
-
-  public detachContext(context: Context<any>) {
-    context.onWillDetach && context.onWillDetach(this);
-    delete this._contexts[context.id];
-    context.onDidDetach && context.onDidDetach(this);
-  }
-
-  public getContext(context: Context<any>) {
-    return this._contexts[context.id];
-  }
-
-  public activateContext(context: Context<any>) {
-    this._activeContext = context;
-  }
-
-  public handleKeyCode(keyCode: string) {
-    const commandToExecute = this.commands.find(command => command.keybinding === keyCode);
-    if (commandToExecute) {
-      this.executeCommand(commandToExecute, {});
+  public detachModule(mod: Module<any>) {
+    if (!this._modules[mod.id]) {
+      throw new Error(`No module with ID '${mod.id}' has been attached`);
     }
+
+    mod.onWillDetach && mod.onWillDetach(this);
+
+    mod.providedCommands.forEach(info => delete this._providedCommands[info.id]);
+    delete this._modules[mod.id];
+
+    mod.onDidDetach && mod.onDidDetach(this);
+  }
+
+  public getCommandProvider(commandId: string) {
+    const provider = this._providedCommands[commandId];
+    if (!provider) {
+      throw new Error(`No provider registered for command with ID '${commandId}'`);
+    }
+
+    return provider.module;
+  }
+
+  public executeCommandById(commandId: string) {
+    const provided = this._providedCommands[commandId];
+    if (!provided) {
+      throw new Error(`Command with ID '${commandId}' not provided by any attached modules`);
+    }
+
+    provided.module.executeCommand(provided.command);
   }
 }
