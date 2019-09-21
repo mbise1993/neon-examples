@@ -2,6 +2,10 @@ export interface Selector<TState, TSelected> {
   (state: TState): TSelected;
 }
 
+export interface StateProvider<TState> {
+  readonly state: TState;
+}
+
 export interface StateHooks<TState, TSelected> {
   select(state: TState): TSelected;
   readonly onWillChange?: (value: TSelected, nextValue: TSelected) => void;

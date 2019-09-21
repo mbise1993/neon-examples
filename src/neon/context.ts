@@ -1,7 +1,7 @@
 import { cloneDeep, pull } from 'lodash';
 
 import { Command, CommandHooks } from './command';
-import { StateHooks } from './state';
+import { StateProvider, StateHooks } from './state';
 import { History } from './history';
 
 type ContextHooks<TState> = StateHooks<TState, any> | CommandHooks<TState>;
@@ -10,9 +10,8 @@ const isStateHook = <TState>(hook: ContextHooks<TState>): hook is StateHooks<TSt
   return 'select' in hook;
 };
 
-export interface Context<TState> {
+export interface Context<TState> extends StateProvider<TState> {
   readonly id: string;
-  readonly state: TState;
   readonly history: History<TState>;
   canExecute(command: Command<TState>): boolean;
   execute(command: Command<TState>): void;
@@ -49,6 +48,10 @@ export class NeonContext<TState> implements Context<TState> {
   }
 
   public execute(command: Command<TState>) {
+    if (!this.canExecute(command)) {
+      throw new Error(`Context '${this.id}' cannot execute command '${command.id}'`);
+    }
+
     this._commandHooks.forEach(hook => hook.onWillExecute && hook.onWillExecute(this, command));
     const newState = command.execute(this);
     this._commandHooks.forEach(hook => hook.onDidExecute && hook.onDidExecute(this, command));

@@ -3,6 +3,7 @@ import { times } from 'lodash';
 
 import { Command, CommandHooks } from './command';
 import { Context } from './context';
+import { StateProvider } from './state';
 
 export interface HistoryFrame<TState> {
   command: Command<TState>;
@@ -13,7 +14,7 @@ export class History<TState> implements CommandHooks<TState> {
   private _pastFrames: FixedStack<HistoryFrame<TState>>;
   private _futureFrames: FixedStack<HistoryFrame<TState>>;
 
-  constructor(private _context: Context<TState>, capacity: number) {
+  constructor(private _stateProvider: StateProvider<TState>, capacity: number) {
     this._pastFrames = new FixedStack<HistoryFrame<TState>>(Array, capacity);
     this._futureFrames = new FixedStack<HistoryFrame<TState>>(Array, capacity);
   }
@@ -28,7 +29,7 @@ export class History<TState> implements CommandHooks<TState> {
   public push(command: Command<TState>) {
     const frame: HistoryFrame<TState> = {
       command,
-      serializedState: JSON.stringify(this._context.state),
+      serializedState: JSON.stringify(this._stateProvider.state),
     };
 
     this._pastFrames.push(frame);
@@ -37,7 +38,7 @@ export class History<TState> implements CommandHooks<TState> {
   private pushRedo(command: Command<TState>) {
     const frame: HistoryFrame<TState> = {
       command,
-      serializedState: JSON.stringify(this._context.state),
+      serializedState: JSON.stringify(this._stateProvider.state),
     };
 
     this._futureFrames.push(frame);
