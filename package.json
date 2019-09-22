@@ -4,12 +4,13 @@
   "description": "Example usages of the Neon framework",
   "license": "MIT",
   "scripts": {
-    "react:counter": "webpack-dev-server --entry ./src/react/counter/index.tsx --hot"
+    "react:counter": "webpack-dev-server --entry ./src/react/counter/index.tsx --hot",
+    "react:todo": "webpack-dev-server --entry ./src/react/todo/index.tsx --hot"
   },
   "dependencies": {
     "@material-ui/core": "^4.4.2",
     "@material-ui/icons": "^4.4.1",
-    "@neon-js/react": "^0.1.0",
+    "@neon-js/react": "^0.1.3",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "typescript": "^3.5.3",

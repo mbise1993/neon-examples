@@ -26,7 +26,7 @@ export const AppContainer: React.FC = ({ children }) => {
               title="Undo"
               color="inherit"
               disabled={!undo.canExecute}
-              onClick={() => undo.execute()}
+              onClick={() => undo.execute({})}
             >
               <UndoIcon />
             </IconButton>
@@ -34,7 +34,7 @@ export const AppContainer: React.FC = ({ children }) => {
               title="Redo"
               color="inherit"
               disabled={!redo.canExecute}
-              onClick={() => redo.execute()}
+              onClick={() => redo.execute({})}
             >
               <RedoIcon />
             </IconButton>

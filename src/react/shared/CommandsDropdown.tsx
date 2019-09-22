@@ -19,7 +19,7 @@ export const CommandsDropdown: React.FC = () => {
 
   const renderMenuItem = (command: Command<any>) => {
     return (
-      <CommandExecutor key={command.id} command={command}>
+      <CommandExecutor key={command.id} command={command} args={{}}>
         {(canExecute, execute) => (
           <MenuItem key={command.id} disabled={!canExecute} onClick={execute}>
             {command.name}
