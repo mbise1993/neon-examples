@@ -1,5 +1,5 @@
 import uuid from 'uuid/v4';
-import { AbstractModule, NeonContext, createModuleContext } from 'react-neon';
+import { AbstractModule, NeonContext, createModuleContext } from '@neon-js/react';
 
 import { CounterCommands } from './counterCommands';
 import { Counter } from './counterState';

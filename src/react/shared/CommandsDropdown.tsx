@@ -10,7 +10,7 @@ import {
   MenuList,
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import { useApp, CommandExecutor, Command } from 'react-neon';
+import { useApp, CommandExecutor, Command } from '@neon-js/react';
 
 export const CommandsDropdown: React.FC = () => {
   const app = useApp();

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Card, IconButton, Typography } from '@material-ui/core';
 import IncrementIcon from '@material-ui/icons/Add';
 import DecrementIcon from '@material-ui/icons/Remove';
-import { useSelector, useCommand } from 'react-neon';
+import { useSelector, useCommand } from '@neon-js/react';
 
 import { CounterContext } from './counterModule';
 import { CounterCommands } from './counterCommands';

@@ -1,4 +1,4 @@
-import { Command, NeonCommands } from 'react-neon';
+import { Command, NeonCommands } from '@neon-js/react';
 
 import { Counter } from './counterState';
 
