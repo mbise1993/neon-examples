@@ -4,25 +4,18 @@
   "description": "Example usages of the Neon framework",
   "license": "MIT",
   "scripts": {
-    "react:counter": "webpack-dev-server --entry ./src/react/counter/index.tsx --hot",
-    "test": "jest --watch"
+    "react:counter": "webpack-dev-server --entry ./src/react/counter/index.tsx --hot"
   },
   "dependencies": {
     "@material-ui/core": "^4.4.2",
     "@material-ui/icons": "^4.4.1",
     "@neon-js/react": "^0.1.0",
-    "lodash": "^4.17.15",
-    "mnemonist": "^0.30.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "typescript": "^3.5.3",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@testing-library/react": "^9.1.4",
-    "@testing-library/react-hooks": "^2.0.1",
-    "@types/jest": "^24.0.18",
-    "@types/lodash": "^4.14.138",
     "@types/react": "^16.9.2",
     "@types/react-dom": "^16.9.0",
     "@types/uuid": "^3.4.5",
@@ -33,10 +26,7 @@
     "eslint-config-prettier": "^6.1.0",
     "eslint-plugin-prettier": "^3.1.0",
     "html-webpack-plugin": "^3.2.0",
-    "jest": "^24.9.0",
     "prettier": "^1.18.2",
-    "react-test-renderer": "^16.9.0",
-    "ts-jest": "^24.0.2",
     "webpack": "^4.40.2",
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.1"
